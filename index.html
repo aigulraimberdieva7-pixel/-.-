@@ -1,0 +1,353 @@
+from pathlib import Path
+import zipfile, shutil, os, textwrap, json
+
+root = Path("/mnt/data/diana-daniyar-github")
+if root.exists():
+    shutil.rmtree(root)
+(root / "assets" / "images").mkdir(parents=True)
+(root / "assets" / "music").mkdir(parents=True)
+
+# Recover the four original photos and the music file from the previously supplied project archive.
+with zipfile.ZipFile("/mnt/data/diana_daniyar_invitation.zip") as z:
+    for member in z.namelist():
+        if member.endswith((".jpg", ".jpeg", ".png", ".webp")):
+            name = Path(member).name
+            target = root / "assets" / "images" / name
+            target.write_bytes(z.read(member))
+        elif member.endswith(".mp3"):
+            (root / "assets" / "music" / "wedding-song.mp3").write_bytes(z.read(member))
+
+# Use the current uploaded original audio if present; preserve the exact uploaded track.
+uploaded_audio = Path("/mnt/data/2_5397951271690868888.mp3")
+if uploaded_audio.exists():
+    shutil.copy2(uploaded_audio, root / "assets" / "music" / "wedding-song.mp3")
+
+html = r'''<!doctype html>
+<html lang="ky">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f4ee">
+  <meta name="description" content="Диана жана Даниярдын үйлөнүү үлпөтүнө чакыруу. 25-апрель 2027-жыл, саат 18:00, Ала Тоо рестораны, Бишкек.">
+  <title>Диана & Данияр — Үйлөнүү үлпөтүнө чакыруу</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <!-- Конверт: конок басканда чакыруу ачылып, музыка башталат. -->
+  <div class="envelope-screen" id="envelopeScreen">
+    <div class="envelope-card">
+      <div class="monogram">D <span>&</span> D</div>
+      <div class="gold-line"></div>
+      <p class="eyebrow">СИЗГЕ АРНАЛГАН ЧАКЫРУУ</p>
+      <h1 class="envelope-names">Диана <i>&</i> Данияр</h1>
+      <p class="envelope-date">25 АПРЕЛЬ 2027 · 18:00</p>
+      <button class="button button-filled" id="openInvitation" type="button">ЧАКЫРУУ КАТЫН АЧУУ ♡</button>
+      <p class="small-note">Чакыруу ачылганда музыка жаңыра баштайт</p>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="container nav-row">
+      <a class="brand" href="#home" aria-label="Башкы бет">D <span>&</span> D</a>
+      <button class="menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="siteNav">МЕНЮ ☰</button>
+      <nav class="site-nav" id="siteNav" aria-label="Негизги меню">
+        <a href="#home">БАШКЫ БЕТ</a>
+        <a href="#story">БИЗ ЖӨНҮНДӨ</a>
+        <a href="#day">ТОЙ КҮНҮ</a>
+        <a href="#program">ПРОГРАММА</a>
+        <a href="#place">ДАРЕК</a>
+        <a href="#rsvp">RSVP</a>
+        <a href="#gallery">СҮРӨТТӨР</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero section-wrap" id="home">
+      <p class="eyebrow">СҮЙҮҮНҮН ЖАҢЫ БАШТАЛЫШЫ</p>
+      <img class="hero-photo" src="assets/images/couple-lake.jpg" alt="Көл жээгинде кол кармашып бара жаткан колукту менен күйөө" fetchpriority="high">
+      <p class="eyebrow">ҮЙЛӨНҮҮ ҮЛПӨТҮНӨ ЧАКЫРУУ</p>
+      <h1 class="couple-names">Диана <span>&</span> Данияр</h1>
+      <div class="gold-line"></div>
+      <p class="intro">Эки жүрөк, бир тагдыр, бир өмүр...<br>Жашообуздагы эң бактылуу күндү сиз менен бөлүшүүгө чакырабыз.</p>
+      <p class="hero-date">25 АПРЕЛЬ 2027 · 18:00</p>
+      <a class="button" href="#story">ЧАКЫРУУНУ ОКУУ</a>
+    </section>
+
+    <section class="content-section" id="story">
+      <div class="container narrow center">
+        <p class="eyebrow">OUR STORY</p>
+        <h2 class="section-title">Биздин сүйүү баяныбыз</h2>
+        <p class="body-copy">Кээ бир жолугушуулар кокустук эмес, тагдырдын эң сонун белеги болот. Биздин жолдорубуз биригип, жүрөктөрүбүз бири-бирин тандады. Эми сүйүүбүздү бир өмүргө улап, жаңы жашоого кадам таштоону чечтик.</p>
+        <p class="body-copy">Бул өзгөчө күнү кубанычыбызды сиз менен бөлүшкүбүз келет.</p>
+        <img class="story-photo wide-photo" src="assets/images/couple-close.jpg" alt="Күйөө менен колуктунун колдору жана шакектери" loading="lazy">
+        <img class="story-photo detail-photo" src="assets/images/rings.jpg" alt="Үйлөнүү шакектери" loading="lazy">
+      </div>
+    </section>
+
+    <section class="content-section" id="day">
+      <div class="container narrow center">
+        <p class="eyebrow">SAVE OUR DATE</p>
+        <h2 class="section-title">25-апрель 2027</h2>
+        <p class="body-copy">Бул күн биздин жүрөгүбүздө түбөлүккө сакталат. Сиздер менен бирге аны күтүп жатабыз.</p>
+        <div class="countdown" aria-label="Тойго чейин калган убакыт">
+          <div class="count-unit"><strong id="days">—</strong><span>КҮН</span></div>
+          <div class="count-unit"><strong id="hours">—</strong><span>СААТ</span></div>
+          <div class="count-unit"><strong id="minutes">—</strong><span>МҮНӨТ</span></div>
+          <div class="count-unit"><strong id="seconds">—</strong><span>СЕКУНД</span></div>
+        </div>
+        <p class="small-note" id="countdownMessage">25-апрель 2027-жыл, саат 18:00гө чейин.</p>
+      </div>
+    </section>
+
+    <section class="content-section" id="program">
+      <div class="container narrow center">
+        <p class="eyebrow">THE WEDDING DAY</p>
+        <h2 class="section-title">Тойдун программасы</h2>
+        <p class="body-copy">Сиздерди жылуу маанай, жагымдуу көз ирмемдер жана унутулгус майрам күтөт.</p>
+        <div class="schedule">
+          <article class="schedule-item">
+            <time>17:30</time>
+            <div><h3>Конокторду тосуп алуу</h3><p>Сиздерди жылуу маанайда күтөбүз.</p></div>
+          </article>
+          <article class="schedule-item">
+            <time>18:00</time>
+            <div><h3>Тойдун башталышы</h3><p>Биздин бактыбызга күбө болуңуздар.</p></div>
+          </article>
+          <article class="schedule-item">
+            <time>...</time>
+            <div><h3>Майрамдык кече</h3><p>Шаң, бий, күлкү жана эстен кеткис көз ирмемдер.</p></div>
+          </article>
+        </div>
+        <p class="small-note">Программанын кошумча убакыттары кийин такталышы мүмкүн.</p>
+      </div>
+    </section>
+
+    <section class="content-section" id="place">
+      <div class="container narrow center">
+        <p class="eyebrow">LOCATION</p>
+        <h2 class="section-title">Кайда жолугабыз?</h2>
+        <div class="venue-card">
+          <h3>Ала Тоо рестораны</h3>
+          <p class="body-copy">25-апрель 2027-жыл · Саат 18:00</p>
+          <p class="body-copy">Бишкек шаары, Кыргызстан</p>
+          <a class="button" href="https://www.google.com/maps/search/?api=1&query=Ala-Too+Restaurant+Bishkek+Kyrgyzstan" target="_blank" rel="noopener noreferrer">КАРТАДАН КӨРҮҮ ↗</a>
+          <p class="small-note">Карта ресторанды Бишкек шаарынан аты боюнча издейт. Так көчө дареги азырынча берилген эмес.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section" id="rsvp">
+      <div class="container narrow center">
+        <p class="eyebrow">PLEASE REPLY</p>
+        <h2 class="section-title">Сизди күтөбүз!</h2>
+        <p class="body-copy">Тойго катыша аларыңызды алдын ала билдирип коюуңузду өтүнөбүз.</p>
+        <form class="rsvp-form" id="rsvpForm">
+          <label for="guestName">Аты-жөнүңүз</label>
+          <input id="guestName" name="name" type="text" autocomplete="name" placeholder="Аты-жөнүңүздү жазыңыз" required>
+          <label for="attendance">Тойго катышасызбы?</label>
+          <select id="attendance" name="attendance" required>
+            <option value="">Тандаңыз</option>
+            <option value="Ооба, сөзсүз келем!">Ооба, сөзсүз келем!</option>
+            <option value="Тилекке каршы, келе албайм.">Тилекке каршы, келе албайм.</option>
+          </select>
+          <label for="guests">Канча адам болуп келесиз?</label>
+          <input id="guests" name="guests" type="number" min="1" max="10" value="1" required>
+          <label for="message">Кошумча билдирүү (каалоо боюнча)</label>
+          <textarea id="message" name="message" rows="3" placeholder="Жылуу каалооңуз..."></textarea>
+          <button class="button button-filled" type="submit">ЖООПТУ ЖӨНӨТҮҮ ♡</button>
+          <p class="form-status small-note" id="formStatus" role="status" aria-live="polite">RSVP жоопторун кабыл алуу үчүн README файлындагы Formspree орнотуусун бүтүрүңүз.</p>
+        </form>
+      </div>
+    </section>
+
+    <section class="content-section" id="gallery">
+      <div class="container narrow center">
+        <p class="eyebrow">OUR MOMENTS</p>
+        <h2 class="section-title">Бактылуу көз ирмемдер</h2>
+        <p class="body-copy">Сүйүү — бул бирге күлүү, бирге кыялдануу жана ар бир көз ирмемди баалоо.</p>
+        <div class="gallery">
+          <img src="assets/images/dress-moment.jpg" alt="Келиндин ак көйнөгү жана жубайлардын көз ирмеми" loading="lazy">
+          <img src="assets/images/rings.jpg" alt="Жубайлардын шакектери" loading="lazy">
+          <img src="assets/images/couple-close.jpg" alt="Жубайлардын назик көз ирмеми" loading="lazy">
+          <img src="assets/images/couple-lake.jpg" alt="Көл жээгиндеги жубайлар" loading="lazy">
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container narrow center">
+      <div class="gold-line"></div>
+      <p class="eyebrow">СҮЙҮҮ МЕНЕН</p>
+      <p class="footer-names">Диана <span>&</span> Данияр</p>
+      <p class="body-copy">Биздин кубанычыбызды бөлүшкөнүңүздөр үчүн чын жүрөктөн ыраазычылык билдиребиз.</p>
+      <p class="hero-date">25 АПРЕЛЬ 2027 · 18:00</p>
+    </div>
+  </footer>
+
+  <audio id="weddingAudio" preload="none" loop>
+    <source src="assets/music/wedding-song.mp3" type="audio/mpeg">
+    Браузериңиз аудио ойнотууну колдобойт.
+  </audio>
+  <button class="music-button" id="musicButton" type="button" aria-label="Музыканы ойнотуу" aria-pressed="false" title="Музыка">♫</button>
+</body>
+</html>
+'''
+
+css = r'''/* Диана & Данияр — Luxury Gold wedding invitation */
+:root {
+  --paper: #f7f4ee;
+  --paper-deep: #efebe2;
+  --ink: #34352f;
+  --muted: #77766e;
+  --gold: #ad9161;
+  --gold-dark: #8f7650;
+  --line: #ded5c5;
+  --white: #fffdfa;
+  --serif: "Cormorant Garamond", Georgia, serif;
+  --sans: "Manrope", Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+body { margin: 0; color: var(--ink); background: var(--paper); font-family: var(--sans); font-weight: 300; }
+button, input, select, textarea { font: inherit; }
+a { color: inherit; }
+.container, .section-wrap { width: min(100% - 36px, 760px); margin-inline: auto; }
+.narrow { max-width: 620px; }
+.center { text-align: center; }
+.site-header { position: sticky; top: 0; z-index: 10; background: #f7f4eeed; border-bottom: 1px solid #e6dfd3; backdrop-filter: blur(12px); }
+.nav-row { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.brand { color: var(--gold-dark); font: 500 24px var(--serif); letter-spacing: .12em; text-decoration: none; white-space: nowrap; }
+.brand span, .couple-names span, .footer-names span { color: #b59b70; font-style: italic; }
+.menu-toggle { border: 0; background: transparent; color: var(--ink); font-size: 11px; letter-spacing: .12em; padding: 10px 0; cursor: pointer; }
+.site-nav { display: none; position: absolute; top: 64px; left: 0; right: 0; padding: 12px 18px 18px; background: var(--paper); border-bottom: 1px solid var(--line); flex-wrap: wrap; gap: 6px; }
+.site-nav.open { display: flex; }
+.site-nav a { padding: 9px 10px; color: var(--muted); text-decoration: none; font-size: 10px; letter-spacing: .08em; }
+.site-nav a:hover, .site-nav a:focus-visible { color: var(--gold-dark); }
+.hero { padding: 30px 0 66px; text-align: center; }
+.eyebrow { margin: 0; color: var(--gold); font-size: 10px; letter-spacing: .25em; line-height: 1.8; }
+.hero-photo { display: block; width: 100%; height: min(72vh, 680px); margin: 20px auto 28px; object-fit: cover; object-position: center 58%; }
+.couple-names { margin: 16px 0; color: var(--gold-dark); font: 400 clamp(48px, 12vw, 88px)/.95 var(--serif); }
+.intro { max-width: 440px; margin: 20px auto; color: var(--muted); font-size: 13px; line-height: 2; }
+.hero-date { margin: 26px 0 18px; color: var(--gold-dark); font: 500 21px var(--serif); letter-spacing: .12em; }
+.gold-line { width: 54px; height: 1px; margin: 22px auto; background: var(--gold); }
+.button { display: inline-flex; min-height: 46px; align-items: center; justify-content: center; padding: 12px 22px; border: 1px solid var(--gold); color: #806943; background: transparent; text-decoration: none; font-size: 10px; letter-spacing: .16em; cursor: pointer; transition: background .2s, color .2s, transform .2s; }
+.button:hover, .button:focus-visible, .button-filled { background: var(--gold); color: white; }
+.button:active { transform: translateY(1px); }
+.content-section { padding: 68px 0; border-top: 1px solid var(--line); }
+.section-title { margin: 12px 0 20px; color: var(--gold-dark); font: 400 clamp(36px, 8vw, 54px)/1.05 var(--serif); }
+.body-copy { max-width: 510px; margin: 0 auto 12px; color: var(--muted); font-size: 13px; line-height: 2; }
+.story-photo { display: block; width: 100%; margin: 28px auto; object-fit: cover; }
+.wide-photo { height: 390px; }
+.detail-photo { height: 490px; object-position: center 42%; }
+.countdown { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 520px; margin: 32px auto 18px; }
+.count-unit { padding: 15px 4px 12px; border-top: 1px solid var(--gold); border-bottom: 1px solid var(--line); }
+.count-unit strong { display: block; color: #947b56; font: 500 clamp(27px, 7vw, 38px) var(--serif); font-variant-numeric: tabular-nums; }
+.count-unit span { color: var(--muted); font-size: 9px; letter-spacing: .12em; }
+.small-note { color: #999184; font-size: 10px; line-height: 1.8; }
+.schedule { max-width: 470px; margin: 28px auto 0; text-align: left; }
+.schedule-item { display: grid; grid-template-columns: 76px 1fr; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.schedule-item time { color: #927951; font: 500 22px var(--serif); }
+.schedule-item h3 { margin: 0; color: #625844; font: 500 18px var(--serif); }
+.schedule-item p { margin: 5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.7; }
+.venue-card { max-width: 500px; margin: 26px auto 0; padding: 32px 20px; background: var(--paper-deep); }
+.venue-card h3 { margin: 0 0 12px; color: var(--gold-dark); font: 500 32px var(--serif); }
+.venue-card .button { margin-top: 18px; }
+.venue-card .small-note { max-width: 370px; margin: 15px auto 0; }
+.rsvp-form { max-width: 470px; margin: 28px auto 0; text-align: left; }
+.rsvp-form label { display: block; margin: 16px 0 7px; color: #746c5d; font-size: 11px; }
+.rsvp-form input, .rsvp-form select, .rsvp-form textarea { display: block; width: 100%; min-height: 46px; padding: 12px 13px; border: 1px solid var(--line); border-radius: 0; outline: none; background: var(--white); color: var(--ink); }
+.rsvp-form textarea { min-height: 90px; resize: vertical; }
+.rsvp-form input:focus, .rsvp-form select:focus, .rsvp-form textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 2px #ad916122; }
+.rsvp-form button { width: 100%; margin-top: 20px; }
+.form-status { min-height: 22px; text-align: center; }
+.gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 28px; }
+.gallery img { width: 100%; height: 270px; object-fit: cover; }
+.gallery img:first-child { grid-column: 1 / -1; height: 390px; }
+.site-footer { padding: 60px 0 76px; text-align: center; }
+.footer-names { margin: 16px 0; color: var(--gold-dark); font: 400 clamp(44px, 10vw, 60px)/1 var(--serif); }
+.music-button { position: fixed; right: 17px; bottom: 17px; z-index: 8; width: 48px; height: 48px; border: 1px solid var(--gold); border-radius: 50%; background: #f7f4eeed; color: var(--gold-dark); font-size: 18px; cursor: pointer; box-shadow: 0 5px 18px #594a3012; }
+.music-button.is-playing { background: var(--gold); color: white; }
+.envelope-screen { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 24px; background: linear-gradient(145deg, #f8f5ee, #eee7da); transition: opacity .8s ease, visibility .8s ease; }
+.envelope-screen.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+.envelope-card { position: relative; display: flex; width: min(100%, 430px); min-height: 520px; flex-direction: column; align-items: center; justify-content: center; padding: 42px 24px; border: 1px solid #c9b58f; outline: 1px solid #e5dccb; outline-offset: -9px; background: #fbf9f4; text-align: center; box-shadow: 0 18px 55px #594a3020; }
+.envelope-card::before, .envelope-card::after { position: absolute; width: 42px; height: 42px; border-color: #b79a68; border-style: solid; content: ""; opacity: .75; }
+.envelope-card::before { top: 22px; left: 22px; border-width: 1px 0 0 1px; }
+.envelope-card::after { right: 22px; bottom: 22px; border-width: 0 1px 1px 0; }
+.monogram { color: #927951; font: 500 32px var(--serif); letter-spacing: .12em; }
+.monogram span, .envelope-names i { color: #b89d72; }
+.envelope-names { margin: 18px 0; color: var(--gold-dark); font: 400 clamp(38px, 10vw, 58px)/1 var(--serif); }
+.envelope-names i { font-style: italic; }
+.envelope-date { margin: 12px 0 28px; color: #786b57; font-size: 11px; letter-spacing: .17em; }
+.envelope-card .small-note { margin-top: 18px; }
+@media (min-width: 760px) {
+  .menu-toggle { display: none; }
+  .site-nav { position: static; display: flex; padding: 0; border: 0; background: transparent; gap: 0; }
+  .site-nav a { padding-inline: 7px; font-size: 9px; }
+  .nav-row { min-height: 66px; }
+}
+@media (max-width: 420px) {
+  .hero-photo { height: 62vh; }
+  .gallery img { height: 220px; }
+  .gallery img:first-child { height: 300px; }
+  .wide-photo { height: 300px; }
+  .detail-photo { height: 390px; }
+  .countdown { gap: 5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+'''
+
+js = r'''/* Диана & Данияр — сайттын интерактивдүү функциялары */
+"use strict";
+
+// 1) Мобилдик меню
+const menuToggle = document.querySelector("#menuToggle");
+const siteNav = document.querySelector("#siteNav");
+
+menuToggle.addEventListener("click", () => {
+  const isOpen = siteNav.classList.toggle("open");
+  menuToggle.setAttribute("aria-expanded", String(isOpen));
+});
+
+siteNav.querySelectorAll("a").forEach((link) => {
+  link.addEventListener("click", () => {
+    siteNav.classList.remove("open");
+    menuToggle.setAttribute("aria-expanded", "false");
+  });
+});
+
+// 2) Countdown: Бишкек убактысы UTC+6, 25-апрель 2027, саат 18:00.
+const weddingDate = new Date("2027-04-25T18:00:00+06:00").getTime();
+const countdownMessage = document.querySelector("#countdownMessage");
+
+function updateCountdown() {
+  const distance = weddingDate - Date.now();
+
+  if (distance <= 0) {
+    ["days", "hours", "minutes", "seconds"].forEach((id) => {
+      document.getElementById(id).textContent = "00";
+    });
+    countdownMessage.textContent = "Бүгүн биздин өзгөчө күнүбүз! Келгениңиздерге рахмат.";
+    return;
+  }
+
+  const values = {
+    days: Math.floor(distance / 86400000),
+    hours: Math.floor((distance % 86400000) / 3600000),
+    minutes: Math.floor((distance % 3600000) / 60000),
+    seconds: Math.floor((distance % 60000) / 1000)
+  };
+
+  Object.entries(values).forEach(([id, value]) => {
+    document.getElementById(id).textContent = String(value).padStart(2, "0");
+  });
+}
+updateCountdown();
+window.setInterval(up
